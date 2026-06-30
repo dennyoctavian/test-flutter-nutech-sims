@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class TextFormCustom extends StatefulWidget {
-  final bool isObsure;
+  final bool isObscure;
   final String placeholder;
   final TextEditingController controller;
   final Icon prefixIcon;
@@ -13,7 +13,7 @@ class TextFormCustom extends StatefulWidget {
   final bool readOnly;
   const TextFormCustom(this.placeholder, this.controller, this.prefixIcon,
       {super.key,
-      this.isObsure = false,
+      this.isObscure = false,
       this.validator,
       this.formatters,
       this.keyboardType = TextInputType.text,
@@ -31,7 +31,7 @@ class _TextFormCustomState extends State<TextFormCustom> {
     return TextFormField(
       readOnly: widget.readOnly,
       controller: widget.controller,
-      obscureText: widget.isObsure ? isHide : false,
+      obscureText: widget.isObscure ? isHide : false,
       validator: widget.validator,
       onChanged: widget.onChange,
       autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -41,7 +41,7 @@ class _TextFormCustomState extends State<TextFormCustom> {
         labelText: widget.placeholder,
         border: const OutlineInputBorder(),
         prefixIcon: widget.prefixIcon,
-        suffixIcon: widget.isObsure
+        suffixIcon: widget.isObscure
             ? GestureDetector(
                 onTap: () {
                   setState(() {

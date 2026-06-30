@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sims_denny/components/alert_dialog_custom.dart';
 import 'package:sims_denny/components/balance_card.dart';
-import 'package:sims_denny/components/cutom_button.dart';
+import 'package:sims_denny/components/custom_button.dart';
 import 'package:sims_denny/components/text_form.dart';
 import 'package:sims_denny/models/information/service.dart';
-import 'package:sims_denny/provider/user_provider.dart';
+import 'package:sims_denny/provider/balance_provider.dart';
 import 'package:sims_denny/utils/shared.dart';
 
 class PaymentPage extends StatefulWidget {
@@ -17,21 +17,17 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   final TextEditingController topupController = TextEditingController();
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
-    super.dispose();
     topupController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Service;
-    topupController.text = topupController.text =
+    topupController.text =
         Shared.formatCurrency.format(args.serviceTariff).replaceAll("Rp ", "");
     return SafeArea(
       child: Scaffold(
@@ -40,7 +36,7 @@ class _PaymentPageState extends State<PaymentPage> {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            "PemBayaran",
+            "Pembayaran",
             style: titleTextStyle.copyWith(color: Colors.black, fontSize: 16),
           ),
           leading: SizedBox(
@@ -50,10 +46,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                  ),
+                  icon: const Icon(Icons.arrow_back, color: Colors.black),
                 ),
                 Text(
                   "Kembali",
@@ -80,19 +73,17 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
               Row(
                 children: [
-                  Container(
+                  SizedBox(
                     height: 30,
                     width: 30,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(args.serviceIcon ?? ''),
-                        fit: BoxFit.contain,
-                      ),
+                    child: Image.network(
+                      args.serviceIcon ?? '',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, size: 30),
                     ),
                   ),
-                  const SizedBox(
-                    width: 5,
-                  ),
+                  const SizedBox(width: 5),
                   Text(
                     (args.serviceCode ?? "").contains("_")
                         ? args.serviceCode?.split("_")[1] ?? ''
@@ -104,30 +95,23 @@ class _PaymentPageState extends State<PaymentPage> {
                   )
                 ],
               ),
-              const SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
               TextFormCustom(
                 "",
                 topupController,
-                const Icon(
-                  Icons.account_balance_wallet_outlined,
-                ),
+                const Icon(Icons.account_balance_wallet_outlined),
                 readOnly: true,
               ),
-              const SizedBox(
-                height: 30,
-              ),
-              Consumer<UserProvider>(
+              const SizedBox(height: 30),
+              Consumer<BalanceProvider>(
                 builder: (context, value, child) =>
                     value.statusBalance == Status.loading
                         ? const UnconstrainedBox(
                             child: SizedBox(
                               width: 30,
                               height: 30,
-                              child: CircularProgressIndicator(
-                                color: Colors.red,
-                              ),
+                              child:
+                                  CircularProgressIndicator(color: Colors.red),
                             ),
                           )
                         : CustomButton("Bayar", () async {

@@ -8,16 +8,16 @@ import 'package:sims_denny/pages/payment_page.dart';
 import 'package:sims_denny/pages/register_page.dart';
 import 'package:sims_denny/pages/topup_page.dart';
 import 'package:sims_denny/pages/transaction_page.dart';
+import 'package:sims_denny/provider/balance_provider.dart';
 import 'package:sims_denny/provider/bottom_navigation_bar_provider.dart';
 import 'package:sims_denny/provider/information_provider.dart';
+import 'package:sims_denny/provider/profile_provider.dart';
 import 'package:sims_denny/provider/transaction_provider.dart';
-import 'package:sims_denny/provider/user_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   FlutterNativeSplash.remove();
   await initializeDateFormatting("id_ID");
   runApp(const MyApp());
@@ -31,7 +31,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => UserProvider(),
+          create: (context) => ProfileProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => BalanceProvider(),
         ),
         ChangeNotifierProvider(
           create: (context) => BannerProvider(),

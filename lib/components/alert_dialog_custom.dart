@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sims_denny/models/information/service.dart';
+import 'package:sims_denny/provider/balance_provider.dart';
 import 'package:sims_denny/provider/bottom_navigation_bar_provider.dart';
-import 'package:sims_denny/provider/user_provider.dart';
 import 'package:sims_denny/utils/assets.dart';
+import 'package:sims_denny/utils/constants.dart';
 import 'package:sims_denny/utils/shared.dart';
 
 Future<void> showConfirmation(BuildContext context,
@@ -11,7 +12,7 @@ Future<void> showConfirmation(BuildContext context,
   return showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           content: SizedBox(
             height: 250,
@@ -29,9 +30,7 @@ Future<void> showConfirmation(BuildContext context,
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 Text(
                   service != null
                       ? "Beli ${service.serviceName} senilai"
@@ -44,35 +43,50 @@ Future<void> showConfirmation(BuildContext context,
                   style: titleHeader,
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    final balanceProvider =
+                        context.read<BalanceProvider>();
+
                     if (service != null) {
-                      context.read<UserProvider>().payment(service, context);
+                      final result = await balanceProvider.payment(service);
+                      if (!context.mounted) return;
+                      if (result.statusCode == ApiConstants.unauthorized) {
+                        Navigator.pushReplacementNamed(context, "/login");
+                        return;
+                      }
+                      Navigator.pop(dialogContext);
+                      showSuccessOrFailed(context,
+                          service: service, isSuccess: result.success);
                     } else {
-                      context
-                          .read<UserProvider>()
-                          .topup(balanceTopup ?? 0, context);
+                      final result =
+                          await balanceProvider.topup(balanceTopup ?? 0);
+                      if (!context.mounted) return;
+                      if (result.statusCode == ApiConstants.unauthorized) {
+                        Navigator.pushReplacementNamed(context, "/login");
+                        return;
+                      }
+                      Navigator.pop(dialogContext);
+                      showSuccessOrFailed(context,
+                          balanceTopup: balanceTopup,
+                          isSuccess: result.success);
                     }
                   },
                   child: Text(
                     service != null
                         ? "Ya, lanjutkan Bayar"
                         : "Ya, lanjutkan Top Up",
-                    style: titleHeader.copyWith(
-                      color: Colors.red,
-                    ),
+                    style: titleHeader.copyWith(color: Colors.red),
                   ),
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(dialogContext);
                   },
                   child: Text(
                     "Batalkan",
-                    style: titleHeader.copyWith(
-                      color: Colors.grey,
-                    ),
+                    style: titleHeader.copyWith(color: Colors.grey),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -85,7 +99,7 @@ Future<void> showSuccessOrFailed(BuildContext context,
   return showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           content: SizedBox(
             height: 250,
@@ -93,34 +107,19 @@ Future<void> showSuccessOrFailed(BuildContext context,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                isSuccess
-                    ? Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                        ),
-                      ),
-                const SizedBox(
-                  height: 20,
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: isSuccess ? Colors.green : Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isSuccess ? Icons.check : Icons.close,
+                    color: Colors.white,
+                  ),
                 ),
+                const SizedBox(height: 20),
                 Text(
                   service != null
                       ? "Pembayaran ${service.serviceName} sebesar"
@@ -138,18 +137,17 @@ Future<void> showSuccessOrFailed(BuildContext context,
                 ),
                 TextButton(
                   onPressed: () {
+                    Navigator.pop(dialogContext);
                     if (service != null) {
                       Navigator.pop(context);
+                    } else {
+                      Navigator.pop(context);
                     }
-                    Navigator.pop(context);
-                    Navigator.pop(context);
                     context.read<BottomNavigationBarProvider>().reset();
                   },
                   child: Text(
                     "Kembali ke Beranda",
-                    style: titleHeader.copyWith(
-                      color: Colors.red,
-                    ),
+                    style: titleHeader.copyWith(color: Colors.red),
                   ),
                 ),
               ],

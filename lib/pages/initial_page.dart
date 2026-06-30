@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sims_denny/pages/bottom_navigation_page.dart';
 import 'package:sims_denny/pages/login_page.dart';
-import 'package:sims_denny/pages/splash_scereen.dart';
+import 'package:sims_denny/pages/splash_screen.dart';
 import 'package:sims_denny/utils/session.dart';
 
 class InitialPage extends StatelessWidget {

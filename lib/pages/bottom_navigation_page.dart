@@ -6,26 +6,22 @@ import 'package:sims_denny/pages/topup_page.dart';
 import 'package:sims_denny/pages/transaction_page.dart';
 import 'package:sims_denny/provider/bottom_navigation_bar_provider.dart';
 
-class BottomNavigationPage extends StatefulWidget {
+class BottomNavigationPage extends StatelessWidget {
   const BottomNavigationPage({super.key});
-
-  @override
-  State<BottomNavigationPage> createState() => _BottomNavigationPageState();
-}
-
-class _BottomNavigationPageState extends State<BottomNavigationPage> {
-  var currentTab = [
-    const HomePage(),
-    const TopUpPage(),
-    const TransactionPage(),
-    const AccountPage()
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Consumer<BottomNavigationBarProvider>(
       builder: (context, value, child) => Scaffold(
-        body: currentTab[value.currentIndex],
+        body: IndexedStack(
+          index: value.currentIndex,
+          children: const [
+            HomePage(),
+            TopUpPage(),
+            TransactionPage(),
+            AccountPage(),
+          ],
+        ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: value.currentIndex,
           onTap: (index) {

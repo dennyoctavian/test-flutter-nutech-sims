@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:sims_denny/components/cutom_button.dart';
+import 'package:sims_denny/components/custom_button.dart';
 import 'package:sims_denny/components/logo.dart';
 import 'package:sims_denny/components/text_form.dart';
 import 'package:sims_denny/models/request_body/register_body.dart';
 import 'package:sims_denny/services/member_service.dart';
+import 'package:sims_denny/utils/constants.dart';
 import 'package:sims_denny/utils/shared.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -19,18 +20,18 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirPasswordController =
+  final TextEditingController confirmPasswordController =
       TextEditingController();
   bool isLoading = false;
 
   @override
   void dispose() {
-    super.dispose();
     emailController.dispose();
     firstNameController.dispose();
     lastNameController.dispose();
     passwordController.dispose();
-    confirPasswordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,109 +47,92 @@ class _RegisterPageState extends State<RegisterPage> {
               shrinkWrap: true,
               children: [
                 const Logo(),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 Text(
                   "Lengkapi data untuk membuat akun",
                   style: titleTextStyle,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 TextFormCustom(
                   'masukan email anda',
                   emailController,
                   const Icon(Icons.alternate_email_outlined),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppStrings.fieldRequired;
                     } else if (!Shared.emailRegExp.hasMatch(value)) {
-                      return 'Enter a valid email address';
+                      return AppStrings.invalidEmail;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 TextFormCustom(
                   'nama depan',
                   firstNameController,
                   const Icon(Icons.person),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppStrings.fieldRequired;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 TextFormCustom(
                   'nama belakang',
                   lastNameController,
                   const Icon(Icons.person),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppStrings.fieldRequired;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 TextFormCustom(
                   'buat password',
                   passwordController,
                   const Icon(Icons.lock_outline),
-                  isObsure: true,
+                  isObscure: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppStrings.fieldRequired;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 TextFormCustom(
                   'konfirmasi password',
-                  confirPasswordController,
+                  confirmPasswordController,
                   const Icon(Icons.lock_outline),
-                  isObsure: true,
+                  isObscure: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppStrings.fieldRequired;
                     }
                     if (passwordController.text != value) {
-                      return 'Password tidak sama';
+                      return AppStrings.passwordMismatch;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 isLoading
                     ? const UnconstrainedBox(
                         child: SizedBox(
                           width: 30,
                           height: 30,
-                          child: CircularProgressIndicator(
-                            color: Colors.red,
-                          ),
+                          child: CircularProgressIndicator(color: Colors.red),
                         ),
                       )
                     : CustomButton("Registrasi", () async {
                         if (_formKey.currentState!.validate()) {
-                          setState(() {
-                            isLoading = true;
-                          });
+                          setState(() => isLoading = true);
+
                           final registerBody = RegisterBody(
                             email: emailController.text,
                             firstName: firstNameController.text,
@@ -157,22 +141,19 @@ class _RegisterPageState extends State<RegisterPage> {
                           );
                           final response =
                               await MemberService().register(registerBody);
-                          setState(() {
-                            isLoading = false;
-                          });
-                          if (response?.status == 0) {
-                            // ignore: use_build_context_synchronously
-                            showSnackBar(context, response?.message ?? "",
+
+                          if (!mounted) return;
+                          setState(() => isLoading = false);
+
+                          if (response.status == ApiConstants.success) {
+                            showSnackBar(context, response.message ?? "",
                                 isSuccess: true);
                           } else {
-                            // ignore: use_build_context_synchronously
-                            showSnackBar(context, response?.message ?? "");
+                            showSnackBar(context, response.message ?? "");
                           }
                         }
                       }),
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -180,17 +161,12 @@ class _RegisterPageState extends State<RegisterPage> {
                       "sudah punya akun? login",
                       style: normalTextStyle,
                     ),
-                    const SizedBox(
-                      width: 3,
-                    ),
+                    const SizedBox(width: 3),
                     InkWell(
                       onTap: () {
                         Navigator.pushReplacementNamed(context, "/login");
                       },
-                      child: Text(
-                        "di sini",
-                        style: linkTextStyle,
-                      ),
+                      child: Text("di sini", style: linkTextStyle),
                     ),
                   ],
                 ),

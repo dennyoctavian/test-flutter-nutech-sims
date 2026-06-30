@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:sims_denny/components/alert_dialog_custom.dart';
 import 'package:sims_denny/components/app_bar_custom.dart';
 import 'package:sims_denny/components/balance_card.dart';
-import 'package:sims_denny/components/cutom_button.dart';
+import 'package:sims_denny/components/custom_button.dart';
 import 'package:sims_denny/components/text_form.dart';
-import 'package:sims_denny/provider/user_provider.dart';
+import 'package:sims_denny/provider/balance_provider.dart';
+import 'package:sims_denny/utils/auth_navigation_mixin.dart';
+import 'package:sims_denny/utils/constants.dart';
 import 'package:sims_denny/utils/shared.dart';
 import 'package:flutter/services.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
@@ -17,13 +19,14 @@ class TopUpPage extends StatefulWidget {
   State<TopUpPage> createState() => _TopUpPageState();
 }
 
-class _TopUpPageState extends State<TopUpPage> {
+class _TopUpPageState extends State<TopUpPage> with AuthNavigationMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController topupController = TextEditingController();
+
   @override
   void dispose() {
-    super.dispose();
     topupController.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,9 +38,11 @@ class _TopUpPageState extends State<TopUpPage> {
             child: Container(
           padding: const EdgeInsets.only(left: 24, right: 24),
           child: RefreshIndicator(
-            onRefresh: () {
-              context.read<UserProvider>().getBalance(context);
-              return Future<void>.delayed(const Duration(seconds: 1));
+            onRefresh: () async {
+              final statusCode =
+                  await context.read<BalanceProvider>().getBalance();
+              if (!mounted) return;
+              handleUnauthorized(statusCode);
             },
             child: ListView(
               children: [
@@ -54,21 +59,15 @@ class _TopUpPageState extends State<TopUpPage> {
                   "nominal Top Up",
                   style: titleTextStyle.copyWith(color: Colors.black),
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 Form(
                   key: _formKey,
                   child: TextFormCustom(
-                    "masukan nominimal Top Up",
+                    "masukan nominal Top Up",
                     topupController,
-                    const Icon(
-                      Icons.account_balance_wallet_outlined,
-                    ),
+                    const Icon(Icons.account_balance_wallet_outlined),
                     formatters: [
-                      FilteringTextInputFormatter.deny(
-                        RegExp(r'^0*'),
-                      ),
+                      FilteringTextInputFormatter.deny(RegExp(r'^0*')),
                       FilteringTextInputFormatter.digitsOnly,
                       CurrencyTextInputFormatter(
                         locale: "id_ID",
@@ -83,34 +82,24 @@ class _TopUpPageState extends State<TopUpPage> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter some text';
+                        return AppStrings.fieldRequired;
                       }
                       int amount = int.tryParse(value.replaceAll(".", "")) ?? 0;
                       if (amount < 10000) {
-                        return 'Minimal Top Up Rp 10.000';
+                        return AppStrings.minTopup;
                       }
                       if (amount > 1000000) {
-                        return 'Maksimal Top Up Rp 1.000.000';
+                        return AppStrings.maxTopup;
                       }
-
                       return null;
                     },
                   ),
                 ),
-                const SizedBox(
-                  height: 25,
-                ),
+                const SizedBox(height: 25),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
-                  children: [
-                    10000,
-                    20000,
-                    50000,
-                    100000,
-                    250000,
-                    500000,
-                  ]
+                  children: [10000, 20000, 50000, 100000, 250000, 500000]
                       .map((e) => GestureDetector(
                             onTap: () {
                               topupController.text = Shared.formatCurrency
@@ -141,10 +130,8 @@ class _TopUpPageState extends State<TopUpPage> {
                           ))
                       .toList(),
                 ),
-                const SizedBox(
-                  height: 80,
-                ),
-                Consumer<UserProvider>(
+                const SizedBox(height: 80),
+                Consumer<BalanceProvider>(
                   builder: (context, value, child) =>
                       value.statusBalance == Status.loading
                           ? const UnconstrainedBox(
@@ -152,13 +139,12 @@ class _TopUpPageState extends State<TopUpPage> {
                                 width: 30,
                                 height: 30,
                                 child: CircularProgressIndicator(
-                                  color: Colors.red,
-                                ),
+                                    color: Colors.red),
                               ),
                             )
                           : CustomButton(
                               "Top Up",
-                              topupController.text != ""
+                              topupController.text.isNotEmpty
                                   ? () async {
                                       if (_formKey.currentState!.validate()) {
                                         int totalAmount = int.tryParse(

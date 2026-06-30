@@ -4,10 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
-import 'package:sims_denny/provider/user_provider.dart';
+import 'package:sims_denny/provider/profile_provider.dart';
+import 'package:sims_denny/utils/constants.dart';
 
 class Shared {
-  static String url = "https://take-home-test-api.nutech-integrasi.app";
   static RegExp emailRegExp =
       RegExp(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$");
   static var formatCurrency =
@@ -20,22 +20,15 @@ class Shared {
   }
 
   static Future<bool> isImageSizeValid(File imageFile, int maxSizeKB) async {
-    // Get the size of the file in bytes
     int fileSize = await imageFile.length();
-
-    // Convert bytes to kilobytes
     double fileSizeKB = fileSize / 1024;
-
-    // Check if the file size is within the specified limit
-    if (fileSizeKB <= maxSizeKB) {
-      return true; // Valid size
-    } else {
-      return false; // Size exceeds the limit
-    }
+    return fileSizeKB <= maxSizeKB;
   }
 
-  static Future<void> changeImageProfile(
-      BuildContext context, UserProvider value) async {
+  /// Pick and validate image, then call provider to upload.
+  /// Returns result record for the widget to handle navigation/snackbar.
+  static Future<({bool success, String message, int? statusCode})?> changeImageProfile(
+      ProfileProvider profileProvider) async {
     XFile? mediaFileList;
     File? image;
     final ImagePicker picker = ImagePicker();
@@ -44,27 +37,30 @@ class Shared {
     );
 
     if (mediaFileList != null) {
-      if ((mediaFileList.path.split('/').last.toLowerCase().contains(".jpg")) ||
-          (mediaFileList.path.split('/').last.toLowerCase().contains(".jpeg") ||
-              (mediaFileList.path
-                  .split('/')
-                  .last
-                  .toLowerCase()
-                  .contains(".png")))) {
+      final fileName = mediaFileList.path.split('/').last.toLowerCase();
+      if (fileName.contains(".jpg") ||
+          fileName.contains(".jpeg") ||
+          fileName.contains(".png")) {
         image = File(mediaFileList.path);
         bool isLimit = await Shared.isImageSizeValid(image, 100);
         if (!isLimit) {
-          // ignore: use_build_context_synchronously
-          showSnackBar(context, "Ukuran gambar terlalu besar Max 100kb");
+          return (
+            success: false,
+            message: AppStrings.imageTooLarge,
+            statusCode: null
+          );
         } else {
-          // ignore: use_build_context_synchronously
-          value.updateProfilePicture(image, context);
+          return await profileProvider.updateProfilePicture(image);
         }
       } else {
-        // ignore: use_build_context_synchronously
-        showSnackBar(context, "File harus .jpg atau .png atau .jpeg");
+        return (
+          success: false,
+          message: AppStrings.invalidImageFormat,
+          statusCode: null
+        );
       }
     }
+    return null;
   }
 }
 
@@ -101,7 +97,8 @@ TextStyle backHeader = GoogleFonts.poppins(
   color: Colors.black,
 );
 
-showSnackBar(BuildContext context, String message, {bool isSuccess = false}) {
+void showSnackBar(BuildContext context, String message,
+    {bool isSuccess = false}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(
@@ -121,9 +118,7 @@ showSnackBar(BuildContext context, String message, {bool isSuccess = false}) {
     action: SnackBarAction(
       label: 'x',
       textColor: isSuccess ? Colors.green : Colors.red,
-      onPressed: () {
-        // Some code to undo the change.
-      },
+      onPressed: () {},
     ),
   ));
 }

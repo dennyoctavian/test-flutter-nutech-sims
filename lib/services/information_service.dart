@@ -1,52 +1,24 @@
-import 'package:dio/dio.dart';
 import 'package:sims_denny/models/information/banner_response.dart';
 import 'package:sims_denny/models/information/service_response.dart';
-import 'package:sims_denny/utils/session.dart';
-import 'package:sims_denny/utils/shared.dart';
+import 'package:sims_denny/services/base_service.dart';
+import 'package:sims_denny/utils/constants.dart';
 
-class InformationService {
-  final dio = Dio();
-  Future<BannerResponse?> getBanner() async {
-    try {
-      String? token = await Session.getToken();
-      final response = await dio.get(
-        "${Shared.url}/banner",
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-          },
-        ),
-      );
-      return BannerResponse.fromMap(response.data);
-    } catch (e) {
-      if (e is DioException) {
-        if (e.response != null) {
-          return BannerResponse.fromMap(e.response?.data);
-        }
-      }
-      return BannerResponse(status: 500, message: e.toString());
-    }
+class InformationService extends BaseService {
+  Future<BannerResponse> getBanner() async {
+    return safeApiCall(
+      apiCall: () => dio.get(ApiConstants.banner),
+      fromMap: (data) => BannerResponse.fromMap(data),
+      fallback: (status, message) =>
+          BannerResponse(status: status, message: message),
+    );
   }
 
-  Future<ServiceResponse?> getService() async {
-    try {
-      String? token = await Session.getToken();
-      final response = await dio.get(
-        "${Shared.url}/services",
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-          },
-        ),
-      );
-      return ServiceResponse.fromMap(response.data);
-    } catch (e) {
-      if (e is DioException) {
-        if (e.response != null) {
-          return ServiceResponse.fromMap(e.response?.data);
-        }
-      }
-      return ServiceResponse(status: 500, message: e.toString());
-    }
+  Future<ServiceResponse> getService() async {
+    return safeApiCall(
+      apiCall: () => dio.get(ApiConstants.services),
+      fromMap: (data) => ServiceResponse.fromMap(data),
+      fallback: (status, message) =>
+          ServiceResponse(status: status, message: message),
+    );
   }
 }

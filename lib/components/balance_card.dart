@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sims_denny/provider/user_provider.dart';
+import 'package:sims_denny/provider/balance_provider.dart';
 import 'package:sims_denny/utils/shared.dart';
 import 'package:skeletons/skeletons.dart';
 
@@ -10,24 +10,17 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 30,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 30),
       child: Container(
         height: 130,
         width: double.infinity,
         decoration: const BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.all(
-            Radius.circular(10),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
-        child: Consumer<UserProvider>(
+        child: Consumer<BalanceProvider>(
           builder: (context, value, child) => Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 30,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -40,9 +33,7 @@ class BalanceCard extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
                 value.statusBalance == Status.loading
                     ? SkeletonLine(
                         style: SkeletonLineStyle(
@@ -59,9 +50,7 @@ class BalanceCard extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
               ],
             ),
           ),
